@@ -24,10 +24,13 @@ jobs:
         with:
           node-version: '20'
 
+      # IMPORTANT:
+      # Do NOT pin pnpm version here, because your package.json already pins it via "packageManager": "pnpm@x.y.z"
+      # Pinning here causes "Multiple versions of pnpm specified" error.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          run_install: false
 
       - name: Install dependencies
         if: hashFiles('pnpm-lock.yaml') != ''
