@@ -1,13 +1,10 @@
 name: Deploy website to GitHub Pages
 
 on:
-  # Trigger the workflow every time you push to the `main` branch
   push:
     branches: ['main']
-  # Allows you to run this workflow manually from the Actions tab on GitHub
   workflow_dispatch:
 
-# Provide permission to clone the repo and deploy it to GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -23,22 +20,42 @@ jobs:
     if: github.repository_owner != 'HugoBlox'
     runs-on: ubuntu-latest
     outputs:
-      deploy-host: ${{ steps.check.outputs.host }}
+      deploy_host: ${{ steps.check.outputs.host }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        sparse-checkout: hugoblox.yaml
-        sparse-checkout-cone-mode: false
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: hugoblox.yaml
+          sparse-checkout-cone-mode: false
 
-    - name: Check deploy host
-      id: check
-      run: |
-        # Read deploy.host from hugoblox.yaml, default to github-pages
-        HOST=$(grep -A5 "^deploy:" hugoblox.yaml 2>/dev/null | grep "host:" | awk '{print $2}' | tr -d "'\""" || echo "github-pages")
-        HOST=${HOST:-github-pages}
-        echo "host=$HOST" >> $GITHUB_OUTPUT
-        echo "Deployment target: $HOST"
+      - name: Check deploy host
+        id: check
+        shell: bash
+        run: |
+          # Read deploy.host from hugoblox.yaml, default to github-pages
+          HOST="github-pages"
+
+          if [[ -f "hugoblox.yaml" ]]; then
+            # Very small YAML parser for:
+            # deploy:
+            #   host: github-pages
+            found="$(awk '
+              $1=="deploy:" {in=1; next}
+              in && $1 ~ /^[A-Za-z_].*:$/ {in=0}     # next top-level key ends deploy block
+              in && $1=="host:" {print $2; exit}
+            ' hugoblox.yaml || true)"
+
+            # strip quotes if any
+            found="${found//\"/}"
+            found="${found//\'/}"
+
+            if [[ -n "$found" ]]; then
+              HOST="$found"
+            fi
+          fi
+
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "Deployment target: $HOST"
 
   # Build website using reusable workflow (always runs for CI)
   build:
@@ -50,17 +67,15 @@ jobs:
   # Deploy website to GitHub Pages hosting (only if configured)
   deploy:
     needs: [config, build]
-    if: needs.config.outputs.deploy-host == 'github-pages'
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    if: needs.config.outputs.deploy_host == 'github-pages'
     permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
-    # Deploy to the github-pages environment
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
