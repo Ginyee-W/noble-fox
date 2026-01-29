@@ -1,111 +1,75 @@
-name: Build
-
-env:
-  NODE_VERSION: '20'
+name: Build website
 
 on:
-  # Standalone trigger for PR validation
-  pull_request:
-    branches: ['main']
-  # Reusable workflow trigger - called by deploy.yml
   workflow_call:
-    outputs:
-      artifact-id:
-        description: 'The ID of the uploaded artifact'
-        value: ${{ jobs.build.outputs.artifact-id }}
-  # Allow manual trigger for testing
-  workflow_dispatch:
 
-# Read-only permissions for security
 permissions:
   contents: read
-
-# Prevent duplicate builds for the same PR
-concurrency:
-  group: build-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  pages: write
+  id-token: write
 
 jobs:
   build:
-    if: github.repository_owner != 'HugoBlox'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        # Fetch history for Hugo's .GitInfo and .Lastmod
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Setup pnpm
-      if: hashFiles('package.json') != ''
-      uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-    - name: Get Hugo Version
-      id: hugo-version
-      run: |
-        VERSION=$(grep "hugo_version" hugoblox.yaml | awk '{print $2}' | tr -d "'\""")
-        echo "HUGO_VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Install dependencies
+        if: hashFiles('pnpm-lock.yaml') != ''
+        run: pnpm install --frozen-lockfile
 
-    - name: Install dependencies
-      run: |
-        # Install Tailwind CLI if package.json exists
-        if [ -f "package.json" ]; then
-          echo "Installing Tailwind dependencies..."
-          pnpm install --no-frozen-lockfile || npm install
-        fi
+      - name: Get Hugo Version
+        id: hugo
+        shell: bash
+        run: |
+          # Read hugo_version from hugoblox.yaml, fallback to a safe default
+          VERSION="0.154.4"
 
-    - name: Setup Hugo
-      uses: peaceiris/actions-hugo@v3
-      with:
-        hugo-version: ${{ env.HUGO_VERSION }}
-        extended: true
+          if [[ -f "hugoblox.yaml" ]]; then
+            v="$(awk -F: '/^[[:space:]]*hugo_version:[[:space:]]*/{print $2; exit}' hugoblox.yaml || true)"
+            v="${v//\"/}"
+            v="${v//\'/}"
+            v="$(echo "$v" | xargs)"   # trim spaces
+            if [[ -n "$v" ]]; then
+              VERSION="$v"
+            fi
+          fi
 
-    # Cache dependencies (Go modules, node_modules) - stable, rarely changes
-    - uses: actions/cache@v4
-      with:
-        path: |
-          /tmp/hugo_cache_runner/
-          node_modules/
-          modules/*/node_modules/
-        key: ${{ runner.os }}-hugo-deps-${{ hashFiles('**/go.mod', '**/package-lock.json',
-          '**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-hugo-deps-
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Hugo version: $VERSION"
 
-    # Cache Hugo resources (processed images, CSS) - invalidates only when assets/config change
-    - uses: actions/cache@v4
-      with:
-        path: resources/
-        key: ${{ runner.os }}-hugo-resources-${{ hashFiles('assets/**/*', 'config/**/*',
-          'hugo.yaml', 'package.json') }}
-        restore-keys: |
-          ${{ runner.os }}-hugo-resources-
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: ${{ steps.hugo.outputs.version }}
+          extended: true
 
-    - name: Build with Hugo
-      env:
-        HUGO_ENVIRONMENT: production
-        HUGO_BLOX_LICENSE: ${{ secrets.HUGO_BLOX_LICENSE }}
-      run: |
-        echo "Hugo Cache Dir: $(hugo config | grep cachedir)"
-        hugo --minify
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
 
-    - name: Generate Pagefind search index (if applicable)
-      run: |
-        # Check if site uses Pagefind search
-        if [ -f "package.json" ] && grep -q "pagefind" package.json; then
-          pnpm run pagefind || npx pagefind --site "public"
-        fi
+      - name: Build with Hugo
+        env:
+          HUGO_ENVIRONMENT: production
+        run: |
+          hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 
-    - name: Upload artifact
-      id: upload
-      uses: actions/upload-pages-artifact@v4
-      with:
-        path: ./public
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./public
