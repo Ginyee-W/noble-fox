@@ -1,0 +1,14 @@
+SIN:
+  name: "Singapore Changi"
+  lat: 1.3644
+  lon: 103.9915
+
+LHR:
+  name: "London Heathrow"
+  lat: 51.4700
+  lon: -0.4543
+
+PVG:
+  name: "Shanghai Pudong"
+  lat: 31.1443
+  lon: 121.8083

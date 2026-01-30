@@ -1,0 +1,26 @@
+{{- $airports := site.Data.airports -}}
+{{- $items := slice -}}
+
+{{- range .Pages.ByDate.Reverse -}}
+  {{- $fromCode := upper .Params.from -}}
+  {{- $toCode := upper .Params.to -}}
+  {{- $from := index $airports $fromCode -}}
+  {{- $to := index $airports $toCode -}}
+
+  {{- $items = $items | append (dict
+    "title" .Title
+    "url" .RelPermalink
+    "date" (.Date.Format "2006-01-02")
+    "year" (.Date.Format "2006")
+    "flight_no" (.Params.flight_no | default "")
+    "aircraft" (.Params.aircraft | default "")
+    "from" $fromCode
+    "to" $toCode
+    "from_lat" ($from.lat | default nil)
+    "from_lon" ($from.lon | default nil)
+    "to_lat" ($to.lat | default nil)
+    "to_lon" ($to.lon | default nil)
+  ) -}}
+{{- end -}}
+
+{{- $items | jsonify -}}

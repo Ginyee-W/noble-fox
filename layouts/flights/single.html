@@ -1,0 +1,18 @@
+{{ define "main" }}
+<main class="page-body">
+  <article class="article">
+    <header class="article-header">
+      <h1>{{ .Title }}</h1>
+
+      <p style="opacity:.75;margin:.4rem 0 0 0;">
+        {{ .Params.flight_no }} · {{ .Date.Format "2006-01-02" }} · {{ .Params.aircraft }}
+        {{ with .Params.seat }} · Seat {{ . }}{{ end }}
+      </p>
+    </header>
+
+    <div class="article-container">
+      {{ .Content }}
+    </div>
+  </article>
+</main>
+{{ end }}

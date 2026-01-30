@@ -1,38 +1,14 @@
 ---
-title: 'Home'
-date: 2023-10-24
-type: landing
-
-design:
-  background:
-    image:
-      # Add your image background to `assets/media/`.
-      filename: bg-hue.svg
+title: "Flight Log"
+type: "page"
 
 sections:
-  - block: resume-biography
-    content:
-      # The user's folder name in content/authors/
-      username: me
+  - block: flightlog
+    # ✅ 保留你喜欢的彩色渐变：这里给一个很好看的默认
+    # 如果你想完全复刻模板的渐变，把你现在首页第一块的 gradient 字符串复制到这里替换即可
     design:
-      biography:
-        style: 'text-align: justify; font-size: 0.8em;'
-      # Avatar customization
-      avatar:
-        size: medium # Options: small (150px), medium (200px, default), large (320px), xl (400px), xxl (500px)
-        shape: circle # Options: circle (default), square, rounded
-  - block: cta-button-list
-    content:
-      # Need a custom icon?
-      # Add an SVG image to the `assets/media/icons/` folder and reference it in the `icon` field below
-      buttons:
-        - text: Read my latest paper on LLMs
-          icon: academicons/arxiv
-          url: https://arxiv.org/abs/2304.01852
-        - text: Watch my new YouTube video to achieve 20x productivity
-          icon: brands/youtube
-          url: https://youtube.com
-        - text: Connect with me on LinkedIn
-          icon: brands/linkedin
-          url: https://linkedin.com
+      background:
+        gradient: "linear-gradient(135deg, rgba(255, 180, 180, 0.55), rgba(160, 220, 255, 0.55), rgba(190, 255, 220, 0.55))"
+      spacing:
+        padding: ["2.5rem", "0", "2.5rem", "0"]
 ---

@@ -1,0 +1,43 @@
+{{- $flights := where site.RegularPages "Section" "flights" -}}
+{{- $groups := sort ($flights.GroupByDate "2006") "Key" "desc" -}}
+
+<section id="flightlog" class="flightlog" data-json-url="{{ "flights/index.json" | relURL }}">
+  <div class="flightlog__header">
+    <div class="flightlog__title">Flight Log</div>
+
+    <div class="flightlog__filter">
+      <select id="flightYear">
+        <option value="all">All</option>
+        {{ range $groups }}
+          <option value="{{ .Key }}">{{ .Key }}</option>
+        {{ end }}
+      </select>
+    </div>
+  </div>
+
+  <div id="flight-map" class="flightlog__map"></div>
+
+  <div class="flightlog__list">
+    {{ range $groups }}
+      <div class="flight-year" data-year="{{ .Key }}">
+        <h2 class="flight-year__title">{{ .Key }}</h2>
+
+        <div class="flight-year__items">
+          {{ range .Pages.ByDate.Reverse }}
+            <a class="flight-item" href="{{ .RelPermalink }}">
+              <div class="flight-item__main">
+                <span class="flight-item__no">{{ .Params.flight_no }}</span>
+                <span class="flight-item__route">{{ upper .Params.from }} → {{ upper .Params.to }}</span>
+              </div>
+              <div class="flight-item__meta">
+                <span>{{ .Date.Format "2006-01-02" }}</span>
+                <span>·</span>
+                <span>{{ .Params.aircraft }}</span>
+              </div>
+            </a>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}
+  </div>
+</section>

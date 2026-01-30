@@ -1,0 +1,4 @@
+---
+title: "Flights"
+type: "page"
+---
