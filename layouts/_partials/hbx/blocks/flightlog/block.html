@@ -1,4 +1,8 @@
-{{- $flights := where site.RegularPages "Section" "flights" -}}
+{{- /* HugoBlox passes a dict into block partials. */ -}}
+{{- $page := .page -}}
+{{- $site := $page.Site -}}
+
+{{- $flights := where $site.RegularPages "Section" "flights" -}}
 {{- $groups := sort ($flights.GroupByDate "2006") "Key" "desc" -}}
 
 <section id="flightlog" class="flightlog" data-json-url="{{ "flights/index.json" | relURL }}">
