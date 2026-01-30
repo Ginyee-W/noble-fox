@@ -4,23 +4,16 @@
 {{- $flights := slice -}}
 {{- $groups := slice -}}
 
-{{- /* 1) Best: get flights section and use its RegularPages */ -}}
-{{- with ($site.GetPage "section" "flights") -}}
-  {{- $flights = .RegularPages | default (slice) -}}
-{{- end -}}
-
-{{- /* 2) Fallback: scan site pages safely (Pages might be nil in some contexts) */ -}}
-{{- if eq (len $flights) 0 -}}
-  {{- $all := $site.Pages | default (slice) -}}
-  {{- $flights = where $all "Section" "flights" -}}
-  {{- $flights = where $flights "Kind" "page" -}}
+{{- /* ✅ 最稳：直接拿 flights section，然后取它的 RegularPagesRecursive */ -}}
+{{- with ($site.GetPage "/flights") -}}
+  {{- $flights = .RegularPagesRecursive | default (slice) -}}
 {{- end -}}
 
 {{- if gt (len $flights) 0 -}}
   {{- $groups = sort ($flights.GroupByDate "2006") "Key" "desc" -}}
 {{- end -}}
 
-<section id="flightlog" class="flightlog" data-json-url="{{ "flights/index.json" | relURL }}">
+<section id="flightlog" class="flightlog">
   <div class="flightlog__header">
     <div class="flightlog__title">Flight Log</div>
 

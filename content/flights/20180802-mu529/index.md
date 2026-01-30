@@ -1,7 +1,7 @@
 ---
 title: "SQ322 SIN → LHR"
 date: 2025-01-15
-type: "flights"
+
 
 flight_no: "SQ322"
 from: "SIN"
