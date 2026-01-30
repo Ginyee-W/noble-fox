@@ -1,10 +1,13 @@
-{{- /* HugoBlox passes a dict into block partials. */ -}}
 {{- $page := .page -}}
 {{- $site := $page.Site -}}
 
-{{- $allPages := $site.RegularPages | default (slice) -}}
-{{- $flights := where $allPages "Section" "flights" -}}
-{{- $groups := sort ($flights.GroupByDate "2006") "Key" "desc" -}}
+{{- $flights := slice -}}
+{{- $groups := slice -}}
+
+{{- with $site.RegularPages -}}
+  {{- $flights = where . "Section" "flights" -}}
+  {{- $groups = sort ($flights.GroupByDate "2006") "Key" "desc" -}}
+{{- end -}}
 
 <section id="flightlog" class="flightlog" data-json-url="{{ "flights/index.json" | relURL }}">
   <div class="flightlog__header">
@@ -25,7 +28,7 @@
   <div class="flightlog__list">
     {{ if eq (len $flights) 0 }}
       <div style="opacity:.75; padding: .8rem 0;">
-        No flights yet. Add a flight at <code>content/flights/&lt;slug&gt;/index.md</code>.
+        No flights yet. Add one at <code>content/flights/&lt;slug&gt;/index.md</code>.
       </div>
     {{ else }}
       {{ range $groups }}
