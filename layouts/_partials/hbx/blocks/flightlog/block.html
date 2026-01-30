@@ -4,8 +4,8 @@
 {{- $flights := slice -}}
 {{- $groups := slice -}}
 
-{{- with $site.RegularPages -}}
-  {{- $flights = where . "Section" "flights" -}}
+{{- with ($site.GetPage "section" "flights") -}}
+  {{- $flights = .RegularPages -}}
   {{- $groups = sort ($flights.GroupByDate "2006") "Key" "desc" -}}
 {{- end -}}
 
@@ -34,7 +34,6 @@
       {{ range $groups }}
         <div class="flight-year" data-year="{{ .Key }}">
           <h2 class="flight-year__title">{{ .Key }}</h2>
-
           <div class="flight-year__items">
             {{ range .Pages.ByDate.Reverse }}
               <a class="flight-item" href="{{ .RelPermalink }}">
