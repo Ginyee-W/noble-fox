@@ -16,6 +16,3 @@ registration: ""     # 可选
 写你的心得：比如餐食/座位/延误/风景等。
 
 ## Photos
-把图片放在同目录里，然后这样引用：
-![Dinner](1.jpg)
-![Window](2.jpg)
