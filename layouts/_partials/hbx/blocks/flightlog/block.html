@@ -4,8 +4,18 @@
 {{- $flights := slice -}}
 {{- $groups := slice -}}
 
+{{- /* 1) Best: get the "flights" section page and use its RegularPages */ -}}
 {{- with ($site.GetPage "section" "flights") -}}
   {{- $flights = .RegularPages -}}
+{{- end -}}
+
+{{- /* 2) Fallback: scan all site pages and keep only regular pages in Section=flights */ -}}
+{{- if eq (len $flights) 0 -}}
+  {{- $flights = where $site.Pages "Section" "flights" -}}
+  {{- $flights = where $flights "Kind" "page" -}}
+{{- end -}}
+
+{{- if gt (len $flights) 0 -}}
   {{- $groups = sort ($flights.GroupByDate "2006") "Key" "desc" -}}
 {{- end -}}
 
